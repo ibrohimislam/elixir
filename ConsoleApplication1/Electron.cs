@@ -94,8 +94,6 @@ namespace Elixir
                 //Console.WriteLine(i.ToString() + " " + j.ToString());
                 key[i] = bytes[offset + i];
 
-            Console.WriteLine("length:" + len.ToString());
-
             Byte[] decoded = new Byte[len];
 
             int payload_data_offset = offset+4;
