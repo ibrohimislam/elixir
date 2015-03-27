@@ -10,9 +10,14 @@ using System.IO;
 
 namespace Elixir
 {
-    class Proton
+    class Proton : IDisposable
     {
         Electron electron;
+
+        public void Dispose()
+        {
+            GC.SuppressFinalize(this);
+        }
 
         public Proton(Electron _electron)
         {
