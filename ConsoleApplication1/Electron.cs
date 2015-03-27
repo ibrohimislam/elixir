@@ -131,7 +131,7 @@ namespace Elixir
 
         public async Task Emit(string message)
         {
-            Console.WriteLine("Thread Count "+Process.GetCurrentProcess().Threads.Count.ToString());
+            //Console.WriteLine("Thread Count "+Process.GetCurrentProcess().Threads.Count.ToString());
 
             int offset;
             Byte[] response;
