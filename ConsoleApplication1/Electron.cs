@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
+using System.Threading;
 
 namespace Elixir
 {
@@ -15,6 +16,7 @@ namespace Elixir
         private TcpClient client;
         private NetworkStream stream;
         private Proton command_processor;
+        private CancellationTokenSource cts;
 
         public Electron(TcpClient _client, int _client_number)
         {
@@ -22,10 +24,12 @@ namespace Elixir
             client = _client;
             stream = _client.GetStream();
             command_processor = new Proton(this);
+            cts = new CancellationTokenSource();
         }
 
         public void Dispose()
         {
+            cts.Cancel();
             Dispose(true);
             GC.SuppressFinalize(this);
         }
@@ -48,11 +52,9 @@ namespace Elixir
             {
                 Byte[] bytes = new Byte[client.ReceiveBufferSize];
 
-                await stream.ReadAsync(bytes, 0, bytes.Length);
+                await stream.ReadAsync(bytes, 0, bytes.Length, cts.Token);
 
                 String data = Encoding.UTF8.GetString(bytes);
-
-                Console.WriteLine(Process.GetCurrentProcess().Threads.Count);
 
                 if (new Regex("^GET").IsMatch(data))
                 {
@@ -94,7 +96,7 @@ namespace Elixir
                         ) + Environment.NewLine
                         + Environment.NewLine);
 
-            doAsync(stream.WriteAsync(response, 0, response.Length));
+            doAsync(stream.WriteAsync(response, 0, response.Length, cts.Token));
         }
 
         public string ParseInput(Byte[] bytes)
@@ -129,6 +131,8 @@ namespace Elixir
 
         public async Task Emit(string message)
         {
+            Console.WriteLine("Thread Count "+Process.GetCurrentProcess().Threads.Count.ToString());
+
             int offset;
             Byte[] response;
 
@@ -152,7 +156,7 @@ namespace Elixir
             Byte[] byte_string = Encoding.UTF8.GetBytes(message);
             byte_string.CopyTo(response, offset);
 
-            doAsync(stream.WriteAsync(response, 0, response.Length));
+            doAsync(stream.WriteAsync(response, 0, response.Length, cts.Token));
         }
     }
 }
